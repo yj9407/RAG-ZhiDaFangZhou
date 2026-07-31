@@ -1,0 +1,21 @@
+[
+  "tests/test_verify_result.py::TestCorrectSqlRouting::test_error_mode_uses_correct_sql_prompt",
+  "tests/test_verify_result.py::TestCorrectSqlRouting::test_feedback_mode_uses_correct_by_feedback_prompt",
+  "tests/test_verify_result.py::TestCorrectSqlRouting::test_feedback_takes_priority_over_error",
+  "tests/test_verify_result.py::TestGraphConditionalRouting::test_missing_keys_default_to_end",
+  "tests/test_verify_result.py::TestGraphConditionalRouting::test_verify_failed_with_retry_ge_2_routes_to_end",
+  "tests/test_verify_result.py::TestGraphConditionalRouting::test_verify_failed_with_retry_under_2_routes_to_correct_sql",
+  "tests/test_verify_result.py::TestGraphConditionalRouting::test_verify_passed_routes_to_end",
+  "tests/test_verify_result.py::TestSummarizeResult::test_empty_list",
+  "tests/test_verify_result.py::TestSummarizeResult::test_large_result_truncated_to_5_rows",
+  "tests/test_verify_result.py::TestSummarizeResult::test_multiple_rows_with_mixed_types",
+  "tests/test_verify_result.py::TestSummarizeResult::test_none_values_handled",
+  "tests/test_verify_result.py::TestSummarizeResult::test_single_row",
+  "tests/test_verify_result.py::TestVerifyResultDecision::test_empty_result_gives_up_after_retries",
+  "tests/test_verify_result.py::TestVerifyResultDecision::test_empty_result_triggers_correction",
+  "tests/test_verify_result.py::TestVerifyResultDecision::test_llm_exception_fails_open",
+  "tests/test_verify_result.py::TestVerifyResultDecision::test_llm_fails_gives_up_after_retries",
+  "tests/test_verify_result.py::TestVerifyResultDecision::test_llm_fails_triggers_correction",
+  "tests/test_verify_result.py::TestVerifyResultDecision::test_llm_passes_goes_to_end",
+  "tests/test_verify_result.py::TestVerifyResultDecision::test_sql_result_is_none_skips_verification"
+]
