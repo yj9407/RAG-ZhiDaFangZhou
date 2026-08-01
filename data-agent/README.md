@@ -1,34 +1,19 @@
-# 数据通达（Data-Agent）— 自然语言转 SQL 查询系统
+# 智达方舟 — 自然语言转 SQL 智能查询系统
 
-## 项目背景
+> 让业务人员用大白话直接查数据库，将查数从 3 天缩短到 10 秒。
 
-企业里业务人员想看数据，流程通常是：提需求 → 等排期 → 技术人员写 SQL → 导出 Excel。一次查数平均需要 2-3 天，效率低、沟通成本高。
+## 项目概述
 
-## 解决方案
+面向企业内部数据查询场景构建的 Text-to-SQL 系统。用户用中文自然语言提问（如"去年华东区销售额前三的省份"），系统自动完成语义理解 → 元数据检索 → SQL 生成 → 双层自愈校验 → 执行返回的全链路自动化。
 
-构建了一个自然语言转 SQL 的问答系统，业务人员直接用中文提问，系统自动理解语义、定位数据表和字段、生成 SQL、执行并返回结果，全程 10 秒级响应。
+## 核心亮点
 
-## 核心实现
-
-**整体流程（LangGraph 12 节点 DAG 工作流）：**
-
-1. 用户输入问题 → jieba 分词提取关键词
-2. 三路并行元数据检索：
-   - Qdrant 向量检索：字段名和指标的语义匹配（如"销售额"→ order_amount）
-   - ES/内置搜索引擎：维度值匹配（如"华东区"→ 地区表枚举值）
-   - MySQL 关系型检索：表结构 + 主外键关联补全
-3. LLM 对召回结果进行精选，过滤无关表和字段
-4. LLM 根据精选的元数据生成 SQL
-5. EXPLAIN 语法校验：通过则直接执行；失败则将报错信息返回给 LLM 修正后再次校验（SQL 自愈闭环）
-6. 执行 SQL，SSE 流式返回结果到前端
-
-**关键设计：**
-
-- **三路并行召回**：等待时间约等于最慢一路，而非三路相加
-- **SQL 自愈闭环**：校验失败自动修正，一次校验通过率达 80%，有效抑制 LLM 幻觉
-- **内置零依赖搜索引擎**：纯 Python 实现（jieba 分词 + 倒排索引），接口兼容 AsyncElasticsearch，无需安装 ES 即可运行
-- **YAML 外置化元数据配置**：新增数据表只需改 YAML + 执行一条命令即可重建知识库索引
-- **全链路日志追踪**：每个请求生成唯一 request_id，注入 Loguru 日志，排查问题可快速定位
+- **12 节点 Agent DAG 工作流**：基于 LangGraph StateGraph 构建，支持并行召回、条件路由与自愈闭环
+- **三路混合元数据检索**：Qdrant 向量检索 + Elasticsearch/自研全文检索 + MySQL 关系型检索，并行执行
+- **双层 SQL 自愈闭环**：EXPLAIN 语法校验 + LLM 四维度语义自检，语法修正一次通过率 80%，有效抑制大模型幻觉
+- **自研零依赖搜索引擎**：纯 Python 实现（jieba 分词 + 倒排索引），接口兼容 AsyncElasticsearch，开发环境零外部依赖
+- **SSE 流式进度推送**：12 步工作流节点实时推送到前端，全流程可视化
+- **全链路日志追踪**：FastAPI 中间件 + Loguru + ContextVar，单次请求所有日志自动注入唯一 request_id
 
 ## 技术栈
 
@@ -36,37 +21,62 @@
 |------|------|
 | 后端框架 | Python 3.12, FastAPI |
 | Agent 工作流 | LangChain, LangGraph |
-| 向量检索 | Qdrant（bge-large-zh-v1.5 embedding, COSINE 相似度） |
+| LLM | DeepSeek / OpenAI 兼容协议 |
+| 向量检索 | Qdrant（bge-large-zh-v1.5, COSINE 相似度） |
 | 全文检索 | Elasticsearch / 内置 SimpleSearchClient |
 | 关系型检索 | SQLAlchemy 2.0 + asyncmy + MySQL 8.0 |
 | 中文分词 | jieba |
 | 日志追踪 | Loguru + ContextVar |
-| 前端 | Vue 3 + Vite（原生 Fetch API + SSE 流式消费） |
+| 前端 | Vue 3 + Vite（原生 Fetch + SSE 流式消费） |
+
+## 架构设计
+
+```
+用户问题
+  ↓
+[1] jieba 分词提取关键词
+  ↓
+[2] Qdrant 向量检索字段  [3] ES/自研 全文检索维度值  [4] Qdrant 向量检索指标
+  ↓                          ↓                          ↓
+[5] 三路结果合并去重 + 补全主外键 + 按表分组
+  ↓
+[6] LLM 精选表与字段       [7] LLM 精选指标
+  ↓
+[8] 补充上下文（日期/数据库方言）
+  ↓
+[9] LLM 生成 SQL
+  ↓
+[10] EXPLAIN 语法校验
+  ├─ 通过 → [12] 执行 SQL → 返回结果
+  └─ 失败 → [11] LLM 根据报错修正 → 回到 [10]
+```
 
 ## 最终效果
 
 - 查数时效从 2-3 天缩短至 10 秒级
-- 三路并行检索将元数据检索耗时压缩至单路约 1/3
-- SQL 自愈闭环使一次校验通过率达 80%
+- 三路并行召回将检索耗时压缩至单路约 1/3
+- SQL 自愈闭环一次校验通过率 80%，语义自检进一步拦截业务逻辑错误
+- 新增数据表仅需配置 YAML 元数据 + 一条命令即可接入，无需修改业务代码
 
 ## 快速启动
 
 ```bash
 # 环境要求：Python 3.12+, MySQL 8.0+, Qdrant, Node.js 18+
 
-# 后端
-cd data-agent
-uv sync
-# 修改 conf/app_config.yaml —— 填 LLM API Key 和地址
-uv run python -m app.scripts.create_dw_data
-uv run python -m app.scripts.build_meta_knowledge -c conf/meta_config.yaml
-uv run python main.py                    # 启动后端 :8000
+cd data-agent && uv sync
+
+# 修改 conf/app_config.yaml —— 填写 LLM API Key 和地址
+# 修改 conf/meta_config.yaml —— （可选）按需调整表/字段/指标定义
+
+uv run python -m app.scripts.create_dw_data       # 创建测试数据
+uv run python -m app.scripts.build_meta_knowledge -c conf/meta_config.yaml  # 构建元知识库
+uv run python main.py                              # 启动后端 :8000
 
 # 前端
-cd data-agent-fronted
-npm install
-npm run dev                              # 启动前端 :5173
+cd data-agent-fronted && npm install && npm run dev
 ```
+
+详细文档请参阅 [rag智达方舟.md](rag智达方舟.md)。
 
 ## 作者
 
