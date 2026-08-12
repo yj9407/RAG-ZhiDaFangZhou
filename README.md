@@ -10,14 +10,14 @@
 
 - **12 节点 Agent DAG 工作流**：基于 LangGraph StateGraph 构建，支持并行召回、条件路由与自愈闭环
 - **三路混合元数据检索**：Qdrant 向量检索 + ES/自研全文检索 + MySQL 关系型检索，并行执行
-- **双层 SQL 自愈闭环**：EXPLAIN 语法校验 + LLM 四维度语义自检，语法修正一次通过率 80%，有效抑制大模型幻觉
+- **双层 SQL 自愈闭环**：EXPLAIN 语法校验 + LLM 五维语义自检，语法修正一次通过率 80%，有效抑制大模型幻觉
 - **自研零依赖搜索引擎**：纯 Python 实现（jieba 分词 + 倒排索引），接口兼容 AsyncElasticsearch
 - **SSE 流式进度推送**：12 步工作流节点实时推送到前端，全流程可视化
 - **全链路日志追踪**：FastAPI 中间件 + Loguru + ContextVar，每个请求自动注入唯一 request_id
 
 ## 完整链路图
 
-### 12 节点 Agent DAG 工作流
+12 节点 Agent DAG 工作流：
 
 ```mermaid
 graph TD
@@ -40,7 +40,7 @@ graph TD
     N8 --> N9["<b>9. generate_sql</b><br/>LLM 生成 SQL"]
 
     N9 --> N10{"<b>10. validate_sql</b><br/>EXPLAIN 语法校验"}
-    
+
     N10 -->|"✅ 通过"| N12["<b>12. execute_sql</b><br/>执行查询"]
     N10 -->|"❌ 语法错误"| N11["<b>11. correct_sql</b><br/>LLM 根据 EXPLAIN 报错修正"]
     N11 --> N10
@@ -69,7 +69,7 @@ graph TD
 
 > **关键路径说明**：蓝底节点为 LLM 推理节点，橙底为并行检索节点，黄底为校验决策节点，红底为修正节点。虚线回路构成**双层 SQL 自愈闭环**——第 1 层通过 EXPLAIN 修正语法错误，第 2 层通过五维语义校验修正逻辑错误。
 
-### 系统分层架构
+系统分层架构：
 
 ```mermaid
 graph TB
@@ -129,8 +129,9 @@ graph TB
 RAG智达方舟/
 ├── data-agent/           # 后端服务（核心代码）
 ├── data-agent-fronted/   # 前端（Vue 3）
+├── docker-compose.yml     # 一键启动 MySQL + Qdrant + ES + Kibana
 ├── main.py
-└── README.md             # 你正在看
+└── README.md              # 你正在看
 ```
 
 详细使用文档见 [data-agent/README.md](data-agent/README.md) 与 [data-agent/rag智达方舟.md](data-agent/rag智达方舟.md)。
@@ -138,6 +139,9 @@ RAG智达方舟/
 ## 快速启动
 
 ```bash
+# 一键启动所有基础设施（MySQL + Qdrant + ES + Kibana + Embedding）
+docker compose up -d
+
 # 后端
 cd data-agent && uv sync
 uv run python -m app.scripts.create_dw_data
