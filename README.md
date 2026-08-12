@@ -5,7 +5,7 @@
 
 ## 核心亮点
 
-- **12 节点 Agent DAG 工作流**：基于 LangGraph StateGraph 构建，支持并行召回、条件路由与自愈闭环
+- **13 节点 Agent DAG 工作流**：基于 LangGraph StateGraph 构建，支持并行召回、条件路由与自愈闭环
 - **三路混合元数据检索**：Qdrant 向量检索 + ES/自研全文检索 + MySQL 关系型检索，并行执行
 - **双层 SQL 自愈闭环**：EXPLAIN 语法校验 + LLM 四维语义自检，语法修正一次通过率 80%，有效抑制大模型幻觉
 - **自研零依赖搜索引擎**：纯 Python 实现（jieba 分词 + 倒排索引），接口兼容 AsyncElasticsearch
@@ -14,7 +14,7 @@
 
 ## 完整链路图
 
-12 节点 Agent DAG 工作流：
+13 节点 Agent DAG 工作流：
 
 ```mermaid
 graph TD
@@ -73,7 +73,7 @@ graph TB
     end
 
     subgraph Agent 引擎层 ["Agent 引擎层 — LangGraph StateGraph"]
-        AG["12 节点 DAG 编排<br/>状态管理 + 条件路由<br/>ContextVar 请求隔离"]
+        AG["13 节点 DAG 编排<br/>状态管理 + 条件路由<br/>ContextVar 请求隔离"]
     end
 
     subgraph 服务层
