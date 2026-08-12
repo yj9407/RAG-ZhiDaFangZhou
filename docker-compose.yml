@@ -1,0 +1,84 @@
+# RAG智达方舟 — 一键部署所有基础设施
+# 用法: docker compose up -d
+
+services:
+  # ========== 数据库层 ==========
+
+  mysql:
+    image: mysql:8.0
+    container_name: data-agent-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_USER: ${MYSQL_USER:-yj9407}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-Aa111111}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ========== 向量数据库层 ==========
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: data-agent-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333" # REST API（代码连接用）
+      - "6334:6334" # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  # ========== 全文检索层 ==========
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    container_name: data-agent-es
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  # ========== ES 可视化管理面板 ==========
+
+  kibana:
+    image: kibana:8.19.10
+    container_name: data-agent-kibana
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+
+  # ========== Embedding 向量服务 ==========
+
+  embedding:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.8
+    container_name: data-agent-embedding
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      - MODEL_ID=${EMBEDDING_MODEL:-BAAI/bge-large-zh-v1.5}
+      - MAX_CONCURRENT_REQUESTS=16
+    volumes:
+      - embedding_model_data:/data
+
+volumes:
+  mysql_data:
+  qdrant_data:
+  es_data:
+  embedding_model_data:
