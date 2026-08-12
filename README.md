@@ -32,14 +32,14 @@ graph TD
     N5 --> N6["<b>⑥ 精选表字段</b><br/>过滤无关列"]:::llm
     N5 --> N7["<b>⑦ 精选指标</b><br/>过滤无关项"]:::llm
 
-    N6 --> N8["<b>⑧ 补充上下文</b><br/>日期 / 版本"]:::ctx
+    N6 --> N8["<b>⑧ 补充上下文</b><br/>日期 / 版本"]:::merge
     N7 --> N8
 
     N8 --> N9["<b>⑨ 生成 SQL</b><br/>LLM 推理"]:::llm
 
     N9 --> N10{"<b>⑩ 语法校验</b><br/>EXPLAIN"}:::decision
 
-    N10 -->|"✅ 通过"| N12["<b>⑫ 执行查询</b><br/>MySQL"]:::exec
+    N10 -->|"✅ 通过"| N12["<b>⑫ 执行查询</b><br/>MySQL"]:::merge
     N10 -->|"❌ 语法错误"| N11["<b>⑪ SQL 自愈</b><br/>报错修正"]:::fix
     N11 -.-> N10
 
@@ -48,17 +48,15 @@ graph TD
     N13 -->|"✅ 通过"| END(["✅ 返回结果"]):::startEnd
     N13 -.->|"❌ 重试"| N11
 
-    classDef startEnd fill:#eef6ee,stroke:#8fb98f,stroke-width:1.5px,color:#3a5a3a
-    classDef llm fill:#eef4fb,stroke:#8fa8cf,stroke-width:1.5px,color:#3a4a6a
-    classDef search fill:#fdf6ec,stroke:#cfa87f,stroke-width:1.5px,color:#6a543a
-    classDef merge fill:#f6eff9,stroke:#b08fc9,stroke-width:1.5px,color:#5a3a6a
-    classDef ctx fill:#fbeef3,stroke:#cf8fa8,stroke-width:1.5px,color:#6a3a4a
-    classDef decision fill:#fbfaec,stroke:#c9c07f,stroke-width:1.5px,color:#6a653a
-    classDef exec fill:#edf7ed,stroke:#8fbf8f,stroke-width:1.5px,color:#3a5a3a
-    classDef fix fill:#fbefef,stroke:#cf8f8f,stroke-width:1.5px,color:#6a3a3a
+    classDef startEnd fill:#e8f5e9,stroke:#66bb6a,stroke-width:1.5px,color:#2e7d32
+    classDef llm fill:#e3f2fd,stroke:#64b5f6,stroke-width:1.5px,color:#1565c0
+    classDef search fill:#fff3e0,stroke:#ffb74d,stroke-width:1.5px,color:#e65100
+    classDef merge fill:#f3e5f5,stroke:#ba68c8,stroke-width:1.5px,color:#7b1fa2
+    classDef decision fill:#fffde7,stroke:#fdd835,stroke-width:1.5px,color:#f9a825
+    classDef fix fill:#ffebee,stroke:#ef5350,stroke-width:1.5px,color:#c62828
 ```
 
-> **关键路径说明**：🟢 入口/出口｜🔵 LLM 推理｜🟠 三路并行检索｜🟣 合并编排｜🟡 校验决策｜🔴 自愈修正。回路构成**双层 SQL 自愈闭环**——第 1 层通过 EXPLAIN 修正语法错误，第 2 层通过四维语义校验修正逻辑错误。
+> **图例**：🟢 入口/出口｜🔵 LLM 推理（①⑥⑦⑨）｜🟠 三路并行检索（②③④）｜🟣 数据编排（⑤⑧⑫）｜🟡 校验决策（⑩⑬）｜🔴 自愈修正（⑪）。回路构成**双层 SQL 自愈闭环**——第 1 层通过 EXPLAIN 修正语法错误，第 2 层通过四维语义校验修正逻辑错误。
 
 系统分层架构：
 
