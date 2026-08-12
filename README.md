@@ -7,7 +7,7 @@
 
 - **12 节点 Agent DAG 工作流**：基于 LangGraph StateGraph 构建，支持并行召回、条件路由与自愈闭环
 - **三路混合元数据检索**：Qdrant 向量检索 + ES/自研全文检索 + MySQL 关系型检索，并行执行
-- **双层 SQL 自愈闭环**：EXPLAIN 语法校验 + LLM 五维语义自检，语法修正一次通过率 80%，有效抑制大模型幻觉
+- **双层 SQL 自愈闭环**：EXPLAIN 语法校验 + LLM 四维语义自检，语法修正一次通过率 80%，有效抑制大模型幻觉
 - **自研零依赖搜索引擎**：纯 Python 实现（jieba 分词 + 倒排索引），接口兼容 AsyncElasticsearch
 - **SSE 流式进度推送**：12 步工作流节点实时推送到前端，全流程可视化
 - **全链路日志追踪**：FastAPI 中间件 + Loguru + ContextVar，每个请求自动注入唯一 request_id
@@ -43,7 +43,7 @@ graph TD
     N10 -->|"❌ 语法错误"| N11["<b>⑪ SQL 自愈</b><br/>LLM 根据 EXPLAIN 报错修正"]:::fix
     N11 --> N10
 
-    N12 --> N13{"<b>⑬ 语义自检</b><br/>五维：聚合/过滤/分组/数据量/口径"}:::decision
+    N12 --> N13{"<b>⑬ 语义自检</b><br/>四维：聚合/过滤/分组/数据量"}:::decision
 
     N13 -->|"✅ 通过"| END(["✅ 返回查询结果"]):::startEnd
     N13 -->|"❌ 未通过 + 重试&lt;2"| N11
