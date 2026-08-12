@@ -41,21 +41,21 @@ graph TD
 
     N10 -->|"✅ 通过"| N12["<b>⑫ 执行查询</b><br/>MySQL"]:::exec
     N10 -->|"❌ 语法错误"| N11["<b>⑪ SQL 自愈</b><br/>LLM 根据 EXPLAIN 报错修正"]:::fix
-    N11 --> N10
+    N11 -.-> N10
 
     N12 --> N13{"<b>⑬ 语义自检</b><br/>四维：聚合/过滤/分组/数据量"}:::decision
 
     N13 -->|"✅ 通过"| END(["✅ 返回查询结果"]):::startEnd
-    N13 -->|"❌ 未通过 + 重试&lt;2"| N11
+    N13 -.->|"❌ 未通过 + 重试&lt;2"| N11
 
-    classDef startEnd fill:#eef6ee,stroke:#8fb98f,stroke-width:1.5px,color:#3a5a3a,font-size:16px
-    classDef llm fill:#eef4fb,stroke:#8fa8cf,stroke-width:1.5px,color:#3a4a6a,font-size:14px
-    classDef search fill:#fdf6ec,stroke:#cfa87f,stroke-width:1.5px,color:#6a543a,font-size:14px
-    classDef merge fill:#f6eff9,stroke:#b08fc9,stroke-width:1.5px,color:#5a3a6a,font-size:14px
-    classDef ctx fill:#fbeef3,stroke:#cf8fa8,stroke-width:1.5px,color:#6a3a4a,font-size:14px
-    classDef decision fill:#fbfaec,stroke:#c9c07f,stroke-width:1.5px,color:#6a653a,font-size:14px
-    classDef exec fill:#edf7ed,stroke:#8fbf8f,stroke-width:1.5px,color:#3a5a3a,font-size:14px
-    classDef fix fill:#fbefef,stroke:#cf8f8f,stroke-width:1.5px,color:#6a3a3a,font-size:14px
+    classDef startEnd fill:#eef6ee,stroke:#8fb98f,stroke-width:1.5px,color:#3a5a3a
+    classDef llm fill:#eef4fb,stroke:#8fa8cf,stroke-width:1.5px,color:#3a4a6a
+    classDef search fill:#fdf6ec,stroke:#cfa87f,stroke-width:1.5px,color:#6a543a
+    classDef merge fill:#f6eff9,stroke:#b08fc9,stroke-width:1.5px,color:#5a3a6a
+    classDef ctx fill:#fbeef3,stroke:#cf8fa8,stroke-width:1.5px,color:#6a3a4a
+    classDef decision fill:#fbfaec,stroke:#c9c07f,stroke-width:1.5px,color:#6a653a
+    classDef exec fill:#edf7ed,stroke:#8fbf8f,stroke-width:1.5px,color:#3a5a3a
+    classDef fix fill:#fbefef,stroke:#cf8f8f,stroke-width:1.5px,color:#6a3a3a
 ```
 
 > **关键路径说明**：🟢 入口/出口｜🔵 LLM 推理｜🟠 三路并行检索｜🟣 合并编排｜🟡 校验决策｜🔴 自愈修正。回路构成**双层 SQL 自愈闭环**——第 1 层通过 EXPLAIN 修正语法错误，第 2 层通过四维语义校验修正逻辑错误。
