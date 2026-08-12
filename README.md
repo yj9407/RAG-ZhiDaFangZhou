@@ -4,7 +4,7 @@
 
 ## 项目概述
 
-面向企业内部数据查询场景构建的 Text-to-SQL 系统。用户用中文自然语言提问，系统自动完成语义理解 → 元数据检索 → SQL 生成 → 双层自愈校验 → 执行返回的全链路自动化。
+搭建企业级自然语言转 SQL 查询系统，让不懂 SQL 的业务人员直接对话数据库。
 
 ## 核心亮点
 
@@ -21,53 +21,47 @@
 
 ```mermaid
 graph TD
-    START([用户自然语言提问]) --> N1["<b>1. extract_keywords</b><br/>jieba 分词 + 词性过滤<br/>提取关键词"]
+    START(["💬 用户自然语言提问"]):::startEnd
+    START --> N1["<b>① 关键词提取</b><br/>jieba 分词 + 词性过滤"]:::llm
 
-    N1 --> N2["<b>2. recall_column</b><br/>LLM 扩展关键词<br/>Embedding → Qdrant 向量检索"]
-    N1 --> N3["<b>3. recall_value</b><br/>LLM 扩展关键词<br/>ES / 自研全文检索"]
-    N1 --> N4["<b>4. recall_metric</b><br/>LLM 扩展关键词<br/>Embedding → Qdrant 向量检索"]
+    N1 --> N2["<b>② 召回字段</b><br/>Embedding → Qdrant 向量检索"]:::search
+    N1 --> N3["<b>③ 召回维度值</b><br/>ES / 自研全文检索"]:::search
+    N1 --> N4["<b>④ 召回指标</b><br/>Embedding → Qdrant 向量检索"]:::search
 
-    N2 --> N5["<b>5. merge_retrieved_info</b><br/>合并去重 + 补全主外键<br/>按表分组"]
+    N2 --> N5["<b>⑤ 合并与主外键补全</b><br/>去重 + 按表分组"]:::merge
     N3 --> N5
     N4 --> N5
 
-    N5 --> N6["<b>6. filter_table</b><br/>LLM 精选表与字段"]
-    N5 --> N7["<b>7. filter_metric</b><br/>LLM 精选指标"]
+    N5 --> N6["<b>⑥ 表与字段精选</b><br/>LLM 过滤无关列"]:::llm
+    N5 --> N7["<b>⑦ 指标精选</b><br/>LLM 过滤无关指标"]:::llm
 
-    N6 --> N8["<b>8. add_extra_context</b><br/>补充日期 / DB 版本信息"]
+    N6 --> N8["<b>⑧ 补充上下文</b><br/>当前日期 / DB 版本"]:::ctx
     N7 --> N8
 
-    N8 --> N9["<b>9. generate_sql</b><br/>LLM 生成 SQL"]
+    N8 --> N9["<b>⑨ 生成 SQL</b><br/>LLM 推理"]:::llm
 
-    N9 --> N10{"<b>10. validate_sql</b><br/>EXPLAIN 语法校验"}
+    N9 --> N10{"<b>⑩ 语法校验</b><br/>EXPLAIN"}:::decision
 
-    N10 -->|"✅ 通过"| N12["<b>12. execute_sql</b><br/>执行查询"]
-    N10 -->|"❌ 语法错误"| N11["<b>11. correct_sql</b><br/>LLM 根据 EXPLAIN 报错修正"]
+    N10 -->|"✅ 通过"| N12["<b>⑫ 执行查询</b><br/>MySQL"]:::exec
+    N10 -->|"❌ 语法错误"| N11["<b>⑪ SQL 自愈</b><br/>LLM 根据 EXPLAIN 报错修正"]:::fix
     N11 --> N10
 
-    N12 --> N13{"<b>verify_result</b><br/>LLM 五维语义自检<br/>聚合/过滤/分组/数据量/口径"}
+    N12 --> N13{"<b>⑬ 语义自检</b><br/>五维：聚合/过滤/分组/数据量/口径"}:::decision
 
-    N13 -->|"✅ 通过"| END([返回查询结果])
+    N13 -->|"✅ 通过"| END(["✅ 返回查询结果"]):::startEnd
     N13 -->|"❌ 未通过 + 重试&lt;2"| N11
 
-    style START fill:#e1f5e1,stroke:#2e7d32,stroke-width:2px
-    style END fill:#e1f5e1,stroke:#2e7d32,stroke-width:2px
-    style N1 fill:#e3f2fd,stroke:#1565c0
-    style N2 fill:#fff3e0,stroke:#e65100
-    style N3 fill:#fff3e0,stroke:#e65100
-    style N4 fill:#fff3e0,stroke:#e65100
-    style N5 fill:#f3e5f5,stroke:#7b1fa2
-    style N6 fill:#e8f5e9,stroke:#2e7d32
-    style N7 fill:#e8f5e9,stroke:#2e7d32
-    style N8 fill:#fce4ec,stroke:#c62828
-    style N9 fill:#e3f2fd,stroke:#1565c0
-    style N10 fill:#fff9c4,stroke:#f9a825
-    style N11 fill:#ffccbc,stroke:#d84315
-    style N12 fill:#c8e6c9,stroke:#388e3c
-    style N13 fill:#fff9c4,stroke:#f9a825
+    classDef startEnd fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
+    classDef llm fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+    classDef search fill:#fff3e0,stroke:#e65100,color:#bf360c
+    classDef merge fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c
+    classDef ctx fill:#fce4ec,stroke:#c62828,color:#880e4f
+    classDef decision fill:#fff9c4,stroke:#f9a825,color:#f57f17
+    classDef exec fill:#c8e6c9,stroke:#388e3c,color:#1b5e20
+    classDef fix fill:#ffccbc,stroke:#d84315,color:#bf360c
 ```
 
-> **关键路径说明**：蓝底节点为 LLM 推理节点，橙底为并行检索节点，黄底为校验决策节点，红底为修正节点。虚线回路构成**双层 SQL 自愈闭环**——第 1 层通过 EXPLAIN 修正语法错误，第 2 层通过五维语义校验修正逻辑错误。
+> **关键路径说明**：🟢 入口/出口｜🔵 LLM 推理｜🟠 三路并行检索｜🟣 合并编排｜🟡 校验决策｜🔴 自愈修正。回路构成**双层 SQL 自愈闭环**——第 1 层通过 EXPLAIN 修正语法错误，第 2 层通过五维语义校验修正逻辑错误。
 
 系统分层架构：
 
