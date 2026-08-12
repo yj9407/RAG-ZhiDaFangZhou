@@ -21,9 +21,9 @@ graph TD
     START(["💬 用户自然语言提问"]):::startEnd
     START --> N1["<b>① 关键词提取</b><br/>jieba 分词 + 词性过滤"]:::llm
 
-    N1 --> N2["<b>② 召回字段</b><br/>Embedding → Qdrant 向量检索"]:::search
+    N1 --> N2["<b>② 召回字段</b><br/>Embedding → Qdrant"]:::search
     N1 --> N3["<b>③ 召回维度值</b><br/>ES / 自研全文检索"]:::search
-    N1 --> N4["<b>④ 召回指标</b><br/>Embedding → Qdrant 向量检索"]:::search
+    N1 --> N4["<b>④ 召回指标</b><br/>Embedding → Qdrant"]:::search
 
     N2 --> N5["<b>⑤ 合并与主外键补全</b><br/>去重 + 按表分组"]:::merge
     N3 --> N5
@@ -58,7 +58,7 @@ graph TD
     classDef fix fill:#ffccbc,stroke:#d84315,color:#bf360c
 ```
 
-> **关键路径说明**：🟢 入口/出口｜🔵 LLM 推理｜🟠 三路并行检索｜🟣 合并编排｜🟡 校验决策｜🔴 自愈修正。回路构成**双层 SQL 自愈闭环**——第 1 层通过 EXPLAIN 修正语法错误，第 2 层通过五维语义校验修正逻辑错误。
+> **关键路径说明**：🟢 入口/出口｜🔵 LLM 推理｜🟠 三路并行检索｜🟣 合并编排｜🟡 校验决策｜🔴 自愈修正。回路构成**双层 SQL 自愈闭环**——第 1 层通过 EXPLAIN 修正语法错误，第 2 层通过四维语义校验修正逻辑错误。
 
 系统分层架构：
 
