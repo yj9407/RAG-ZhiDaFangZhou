@@ -21,18 +21,18 @@ graph TD
     START(["💬 用户自然语言提问"]):::startEnd
     START --> N1["<b>① 关键词提取</b><br/>jieba 分词 + 词性过滤"]:::llm
 
-    N1 --> N2["<b>② 召回字段</b><br/>Embedding → Qdrant"]:::search
-    N1 --> N3["<b>③ 召回维度值</b><br/>ES / 自研全文检索"]:::search
-    N1 --> N4["<b>④ 召回指标</b><br/>Embedding → Qdrant"]:::search
+    N1 --> N2["<b>② 召回字段</b><br/>向量检索"]:::search
+    N1 --> N3["<b>③ 召回维度值</b><br/>全文检索"]:::search
+    N1 --> N4["<b>④ 召回指标</b><br/>向量检索"]:::search
 
-    N2 --> N5["<b>⑤ 合并与主外键补全</b><br/>去重 + 按表分组"]:::merge
+    N2 --> N5["<b>⑤ 合并去重</b><br/>补全主外键"]:::merge
     N3 --> N5
     N4 --> N5
 
-    N5 --> N6["<b>⑥ 表与字段精选</b><br/>LLM 过滤无关列"]:::llm
-    N5 --> N7["<b>⑦ 指标精选</b><br/>LLM 过滤无关指标"]:::llm
+    N5 --> N6["<b>⑥ 精选表字段</b><br/>过滤无关列"]:::llm
+    N5 --> N7["<b>⑦ 精选指标</b><br/>过滤无关项"]:::llm
 
-    N6 --> N8["<b>⑧ 补充上下文</b><br/>当前日期 / DB 版本"]:::ctx
+    N6 --> N8["<b>⑧ 补充上下文</b><br/>日期 / 版本"]:::ctx
     N7 --> N8
 
     N8 --> N9["<b>⑨ 生成 SQL</b><br/>LLM 推理"]:::llm
@@ -40,13 +40,13 @@ graph TD
     N9 --> N10{"<b>⑩ 语法校验</b><br/>EXPLAIN"}:::decision
 
     N10 -->|"✅ 通过"| N12["<b>⑫ 执行查询</b><br/>MySQL"]:::exec
-    N10 -->|"❌ 语法错误"| N11["<b>⑪ SQL 自愈</b><br/>LLM 根据 EXPLAIN 报错修正"]:::fix
+    N10 -->|"❌ 语法错误"| N11["<b>⑪ SQL 自愈</b><br/>报错修正"]:::fix
     N11 -.-> N10
 
-    N12 --> N13{"<b>⑬ 语义自检</b><br/>四维：聚合/过滤/分组/数据量"}:::decision
+    N12 --> N13{"<b>⑬ 语义自检</b><br/>四维校验"}:::decision
 
-    N13 -->|"✅ 通过"| END(["✅ 返回查询结果"]):::startEnd
-    N13 -.->|"❌ 未通过 + 重试&lt;2"| N11
+    N13 -->|"✅ 通过"| END(["✅ 返回结果"]):::startEnd
+    N13 -.->|"❌ 重试"| N11
 
     classDef startEnd fill:#eef6ee,stroke:#8fb98f,stroke-width:1.5px,color:#3a5a3a
     classDef llm fill:#eef4fb,stroke:#8fa8cf,stroke-width:1.5px,color:#3a4a6a
