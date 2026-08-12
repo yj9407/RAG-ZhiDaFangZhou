@@ -48,14 +48,14 @@ graph TD
     N13 -->|"✅ 通过"| END(["✅ 返回查询结果"]):::startEnd
     N13 -->|"❌ 未通过 + 重试&lt;2"| N11
 
-    classDef startEnd fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
-    classDef llm fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-    classDef search fill:#fff3e0,stroke:#e65100,color:#bf360c
-    classDef merge fill:#f3e5f5,stroke:#7b1fa2,color:#4a148c
-    classDef ctx fill:#fce4ec,stroke:#c62828,color:#880e4f
-    classDef decision fill:#fff9c4,stroke:#f9a825,color:#f57f17
-    classDef exec fill:#c8e6c9,stroke:#388e3c,color:#1b5e20
-    classDef fix fill:#ffccbc,stroke:#d84315,color:#bf360c
+    classDef startEnd fill:#eef6ee,stroke:#8fb98f,stroke-width:1.5px,color:#3a5a3a,font-size:16px
+    classDef llm fill:#eef4fb,stroke:#8fa8cf,stroke-width:1.5px,color:#3a4a6a,font-size:14px
+    classDef search fill:#fdf6ec,stroke:#cfa87f,stroke-width:1.5px,color:#6a543a,font-size:14px
+    classDef merge fill:#f6eff9,stroke:#b08fc9,stroke-width:1.5px,color:#5a3a6a,font-size:14px
+    classDef ctx fill:#fbeef3,stroke:#cf8fa8,stroke-width:1.5px,color:#6a3a4a,font-size:14px
+    classDef decision fill:#fbfaec,stroke:#c9c07f,stroke-width:1.5px,color:#6a653a,font-size:14px
+    classDef exec fill:#edf7ed,stroke:#8fbf8f,stroke-width:1.5px,color:#3a5a3a,font-size:14px
+    classDef fix fill:#fbefef,stroke:#cf8f8f,stroke-width:1.5px,color:#6a3a3a,font-size:14px
 ```
 
 > **关键路径说明**：🟢 入口/出口｜🔵 LLM 推理｜🟠 三路并行检索｜🟣 合并编排｜🟡 校验决策｜🔴 自愈修正。回路构成**双层 SQL 自愈闭环**——第 1 层通过 EXPLAIN 修正语法错误，第 2 层通过四维语义校验修正逻辑错误。
